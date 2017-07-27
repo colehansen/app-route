@@ -264,9 +264,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         var routes = fixtureChainedRoutes({ path: '', __queryParams: {
           qux: 'zot'
         }});
-        expect(routes.foo.queryParams).to.be.eql({});
-        expect(routes.bar.queryParams).to.be.eql({});
-        expect(routes.baz.queryParams).to.be.eql({});
+        expect(routes.foo.queryParams).to.be.eql(new URLSearchParams());
+        expect(routes.bar.queryParams).to.be.eql(new URLSearchParams());
+        expect(routes.baz.queryParams).to.be.eql(new URLSearchParams());
       });
 
       test('updates query params for all matched routes', function() {
