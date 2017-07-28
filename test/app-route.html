@@ -19,6 +19,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <link rel="import" href="../../polymer/polymer.html">
   <link rel="import" href="../app-route.html">
   <link rel="import" href="./redirection.html">
+  <link rel="import" href="./urlsearchparams.html">
 </head>
 <body>
   <div id='safari-cooldown' hidden>
@@ -106,7 +107,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     chainedRoutes.$.foo.route = {
       path: route.path || '',
       prefix: route.prefix || '',
-      __queryParams: route.__queryParams || {}
+      __queryParams: route.__queryParams || new URLSearchParams()
     };
 
     return {
@@ -134,7 +135,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       route.route = {
         prefix: '',
         path: '/user/papyrus/details',
-        __queryParams: {}
+        __queryParams: new URLSearchParams()
       }
       expect(route.tail.prefix).to.be.equal('/user/papyrus');
       expect(route.tail.path).to.be.equal('/details');
@@ -145,17 +146,18 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       route.route = {
         prefix: '',
         path: '/user/papyrus/details',
-        __queryParams: {}
+        __queryParams: new URLSearchParams()
       };
 
       route.set('tail.path', '/messages');
       expect(route.route.path).to.be.deep.equal('/user/papyrus/messages');
       route.set('route.path', '/user/toriel');
-      expect(route.tail).to.be.deep.equal({
-        prefix: '/user/toriel',
-        path: '',
-        __queryParams: {}
-      });
+      expect(route.tail.prefix).to.be.equal('/user/toriel');
+      expect(route.tail.path).to.be.equal('');
+      expect(URLSearchParamsUtil.equal(
+        route.tail.__queryParams,
+        new URLSearchParams()
+      ));
     });
 
     test('it creates data as described by pattern', function() {
@@ -261,59 +263,128 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
     suite('propagating query params', function() {
       test('query params are empty if no routes match', function() {
-        var routes = fixtureChainedRoutes({ path: '', __queryParams: {
-          qux: 'zot'
-        }});
-        expect(routes.foo.queryParams).to.be.eql(new URLSearchParams());
-        expect(routes.bar.queryParams).to.be.eql(new URLSearchParams());
-        expect(routes.baz.queryParams).to.be.eql(new URLSearchParams());
+        // The current spec allows construction of URLSearchParams from
+        // native JS objects, but Chrome (v60) does not implement it
+        // So instead construct via 'append's
+        var queryParams = new URLSearchParams();
+        queryParams.append('qux', 'zot');
+        var routes = fixtureChainedRoutes({
+          path: '',
+          __queryParams: queryParams
+        });
+        expect(URLSearchParamsUtil.equal(
+          routes.foo.queryParams,
+          new URLSearchParams()
+        )).to.be.true;
+        expect(URLSearchParamsUtil.equal(
+          routes.bar.queryParams,
+          new URLSearchParams()
+        )).to.be.true;
+        expect(URLSearchParamsUtil.equal(
+          routes.baz.queryParams,
+          new URLSearchParams()
+        )).to.be.true;
       });
 
       test('updates query params for all matched routes', function() {
-        var routes = fixtureChainedRoutes({ path: '/foo/123/bar/abc', __queryParams: {
-          qux: 'zot'
-        }});
-        expect(routes.foo.queryParams).to.be.eql({ qux: 'zot' });
-        expect(routes.bar.queryParams).to.be.eql({ qux: 'zot' });
-        expect(routes.baz.queryParams).to.be.eql({});
+        var queryParams = new URLSearchParams();
+        queryParams.append('qux', 'zot');
+        var routes = fixtureChainedRoutes({
+          path: '/foo/123/bar/abc',
+          __queryParams: queryParams
+        });
+        var expectedQueryParams = new URLSearchParams();
+        expectedQueryParams.append('qux', 'zot');
+        expect(URLSearchParamsUtil.equal(
+          routes.foo.queryParams,
+          expectedQueryParams
+        )).to.be.true;
+        expect(URLSearchParamsUtil.equal(
+          routes.bar.queryParams,
+          expectedQueryParams
+        )).to.be.true;
+        expect(URLSearchParamsUtil.equal(
+          routes.baz.queryParams,
+          new URLSearchParams()
+        )).to.be.true;
       });
 
       test('retains query params after routes deactivate', function() {
-        var routes = fixtureChainedRoutes({ path: '/foo/123/bar/abc', __queryParams: {
-          qux: 'zot'
-        }});
-        routes.foo.set('route.path', '/foo/123/baz/xyz')
-        routes.foo.set('queryParams', {
-          qux: 'quux'
+        var queryParams = new URLSearchParams();
+        queryParams.append('qux', 'zot');
+        var routes = fixtureChainedRoutes({
+          path: '/foo/123/bar/abc', 
+          __queryParams: queryParams
         });
-        expect(routes.foo.queryParams).to.be.eql({ qux: 'quux' });
-        expect(routes.bar.queryParams).to.be.eql({ qux: 'zot' });
-        expect(routes.baz.queryParams).to.be.eql({ qux: 'quux' });
+        routes.foo.set('route.path', '/foo/123/baz/xyz');
+        var newQueryParams = new URLSearchParams();
+        newQueryParams.append('qux', 'quux');
+        routes.foo.set('queryParams', newQueryParams);
+
+        expect(URLSearchParamsUtil.equal(
+          routes.foo.queryParams,
+          newQueryParams
+        )).to.be.true;
+        expect(URLSearchParamsUtil.equal(
+          routes.bar.queryParams,
+          queryParams
+        )).to.be.true;
+        expect(URLSearchParamsUtil.equal(
+          routes.baz.queryParams,
+          newQueryParams
+        )).to.be.true;
       });
 
       suite('updating global query params', function() {
         test('happens when query params change on active routes', function() {
-          var routes = fixtureChainedRoutes({ path: '/foo/123/bar/abc', __queryParams: {
-            qux: 'zot'
-          }});
+          var queryParams = new URLSearchParams();
+          queryParams.append('qux', 'zot');
+          var routes = fixtureChainedRoutes({
+            path: '/foo/123/bar/abc',
+            __queryParams: queryParams
+          });
+          var newQueryParams = new URLSearchParams();
+          newQueryParams.append('qux', 'quux');
+          routes.bar.set('queryParams', newQueryParams);
 
-          routes.bar.set('queryParams', { qux: 'quux' });
-
-          expect(routes.foo.queryParams).to.be.eql({ qux: 'quux' });
-          expect(routes.bar.queryParams).to.be.eql({ qux: 'quux' });
-          expect(routes.baz.queryParams).to.be.eql({});
+          expect(URLSearchParamsUtil.equal(
+            routes.foo.queryParams,
+            newQueryParams
+          )).to.be.true;
+          expect(URLSearchParamsUtil.equal(
+            routes.bar.queryParams,
+            newQueryParams
+          )).to.be.true;
+          expect(URLSearchParamsUtil.equal(
+            routes.baz.queryParams,
+            new URLSearchParams()
+          )).to.be.true;
         });
 
         test('updates are ignored for routes that are inactive', function() {
-          var routes = fixtureChainedRoutes({ path: '/foo/123/bar/abc', __queryParams: {
-            qux: 'zot'
-          }});
+          var queryParams = new URLSearchParams();
+          queryParams.append('qux', 'zot');
+          var routes = fixtureChainedRoutes({
+            path: '/foo/123/bar/abc',
+            __queryParams: queryParams
+          });
 
-          routes.baz.set('queryParams', { qux: 'quux' });
+          var newQueryParams = new URLSearchParams();
+          newQueryParams.append('qux', 'quux');
+          routes.baz.set('queryParams', newQueryParams);
 
-          expect(routes.foo.queryParams).to.be.eql({ qux: 'zot' });
-          expect(routes.bar.queryParams).to.be.eql({ qux: 'zot' });
-          expect(routes.baz.queryParams).to.be.eql({ qux: 'quux' });
+          expect(URLSearchParamsUtil.equal(
+            routes.foo.queryParams,
+            queryParams
+          )).to.be.true;
+          expect(URLSearchParamsUtil.equal(
+            routes.bar.queryParams,
+            queryParams
+          )).to.be.true;
+          expect(URLSearchParamsUtil.equal(
+            routes.baz.queryParams,
+            newQueryParams
+          )).to.be.true;
         });
 
         test('doesn\'t generate excess query-params-changed events', function() {
@@ -335,7 +406,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           expect(numChanges).to.be.equal(0);
 
           // Changing queryParams here should update foo and baz
-          routes.foo.set('route.__queryParams', {key: 'value'});
+          var queryParams = new URLSearchParams();
+          queryParams.append(key, 'value');
+          routes.foo.set('route.__queryParams', queryParams);
           expect(numChanges).to.be.equal(2);
           // Then this should update bar
           routes.foo.set('route.path', '/foo/123/bar/456');
@@ -345,7 +418,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           routes.foo.set('route.path', '/foo/456/baz/789');
           expect(numChanges).to.be.equal(3);
 
-          routes.foo.set('route.__queryParams', {});
+          routes.foo.set('route.__queryParams', new URLSearchParams());
           expect(numChanges).to.be.equal(5);
           routes.foo.set('route.path', '/foo/123/bar/456');
           expect(numChanges).to.be.equal(6);

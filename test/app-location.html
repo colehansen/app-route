@@ -19,6 +19,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <link rel="import" href="../../polymer/polymer.html">
   <link rel="import" href="../../iron-test-helpers/mock-interactions.html">
   <link rel="import" href="../app-location.html">
+  <link rel="import" href="./urlsearchparams.html">
 </head>
 <body>
   <test-fixture id="BasicLocation">
@@ -88,7 +89,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
           setup(function() {
             originalPath = appLocation.route.path;
-            originalQueryParams = assign({}, appLocation.route.__queryParams);
+            // constructring URLSearchParams from an object is depracated
+            // so get an iterable to construct with
+            originalQueryParams = new URLSearchParams(
+              appLocation.route.__queryParams.entries()
+            );
           });
 
           teardown(function() {
@@ -103,12 +108,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           });
 
           test('it reflects queryParams values to location.search', function() {
-            appLocation.set('route.__queryParams.foo', 1);
+            var queryParams = route.__queryParams;
+            queryParams.set('foo', 1);
+            appLocation.notifyPath('route.__queryParams');
             expect(window.location.search).to.match(/foo=1/);
           });
 
           test('it reflects completely replaced queryParams', function() {
-            appLocation.set('route.__queryParams', { bar: 1 });
+            var queryParams = new URLSearchParams();
+            queryParams.append('bar', 1);
+            appLocation.set('route.__queryParams', queryParams);
             expect(window.location.search).to.be.equal('?bar=1');
           });
 
@@ -140,9 +149,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
           test('it reflects location.search to route.__queryParams', function() {
             setLocation('?fiz=buz');
-            expect(appLocation.route.__queryParams).to.be.eql({
-              fiz: 'buz'
-            });
+            var expectedQueryParams = new URLSearchParams();
+            expectedQueryParams.append('fiz','buz');
+            expect(URLSearchParamsUtil.equal(
+              appLocation.route.__queryParams,
+              expectedQueryParams
+            )).to.be.true;
           });
         });
       });

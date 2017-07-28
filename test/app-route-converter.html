@@ -17,6 +17,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   <link rel="import" href="../../polymer/polymer.html">
   <link rel="import" href="../app-route-converter.html">
+  <link rel="import" href="./urlsearchparams.html">
 </head>
 <body>
   <test-fixture id="BasicRouteConversion">
@@ -33,25 +34,35 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       test('it bidirectionally maps path and queryParams to route', function() {
         var converter = fixture('BasicRouteConversion');
 
-        var queryParams = {x: '10'};
+        var queryParams = new URLSearchParams();
+        queryParams.append('x', '10');
         converter.path = '/a/b/c';
         converter.queryParams = queryParams;
 
-        expect(converter.route).to.be.deep.equal({
-          prefix: '',
-          path: '/a/b/c',
-          __queryParams: queryParams
-        });
+        expect(converter.route.prefix).to.be.equal('');
+        expect(converter.route.path).to.be.equal('/a/b/c');
+        expect(URLSearchParamsUtil.equal(
+          converter.route.__queryParams,
+          queryParams
+        )).to.be.true;
 
         converter.set('route.path', '/d/e/f');
         expect(converter.path).to.be.equal('/d/e/f');
 
-        queryParams = {y: '11'};
+        queryParams = new URLSearchParams();
+        queryParams.append('y', '11');
         converter.set('route.__queryParams', queryParams);
-        expect(converter.queryParams).to.be.deep.equal(queryParams);
+        expect(URLSearchParamsUtil.equal(
+          converter.queryParams,
+          queryParams
+        )).to.be.true;
 
-        queryParams['z'] = '12';
-        expect(converter.queryParams).to.be.deep.equal(queryParams);
+        queryParams.append('z', '12');
+        converter.notifyPath('queryParams');
+        expect(URLSearchParamsUtil.equal(
+          converter.queryParams,
+          queryParams
+        )).to.be.true;
       });
     });
   </script>
