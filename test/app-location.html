@@ -89,11 +89,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
           setup(function() {
             originalPath = appLocation.route.path;
-            // constructring URLSearchParams from an object is depracated
-            // so get an iterable to construct with
-            originalQueryParams = new URLSearchParams(
-              appLocation.route.__queryParams.entries()
-            );
+            if (!appLocation.route || !appLocation.route.__queryParams) {
+              originalQueryParams = new URLSearchParams();
+            } else {
+              // constructring URLSearchParams from a URLSearchParams 
+              // object is depracated, so construct from string representation
+              originalQueryParams = new URLSearchParams(
+                appLocation.route.__queryParams.toString()
+              );
+            }
           });
 
           teardown(function() {
@@ -108,9 +112,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           });
 
           test('it reflects queryParams values to location.search', function() {
-            var queryParams = route.__queryParams;
+            var queryParams = appLocation.route.__queryParams;
             queryParams.set('foo', 1);
-            appLocation.notifyPath('route.__queryParams');
+            appLocation.set('route.__queryParams', queryParams);
             expect(window.location.search).to.match(/foo=1/);
           });
 

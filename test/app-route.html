@@ -407,7 +407,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
           // Changing queryParams here should update foo and baz
           var queryParams = new URLSearchParams();
-          queryParams.append(key, 'value');
+          queryParams.append('key', 'value');
           routes.foo.set('route.__queryParams', queryParams);
           expect(numChanges).to.be.equal(2);
           // Then this should update bar

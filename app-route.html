@@ -127,7 +127,7 @@ the `app-route` will update `route.path`. This in-turn will update the
         queryParams: {
           type: Object,
           value: function() {
-            return {};
+            return new URLSearchParams();
           },
           notify: true
         },
@@ -184,7 +184,7 @@ the `app-route` will update `route.path`. This in-turn will update the
        */
       __routeQueryParamsChanged: function(queryParams) {
         if (queryParams && this.tail) {
-          if (this.tail.__queryParams !== queryParams) {
+          if (!this.__queryParamsEqual(this.tail.__queryParams, queryParams)) {
             this.set('tail.__queryParams', queryParams);
           }
 
@@ -192,40 +192,66 @@ the `app-route` will update `route.path`. This in-turn will update the
             return;
           }
 
-          // Copy queryParams and track whether there are any differences compared
+          // Check whether there are any differences compared
           // to the existing query params.
-          var copyOfQueryParams = {};
-          var anythingChanged = false;
-          for (var key in queryParams) {
-            copyOfQueryParams[key] = queryParams[key];
-            if (anythingChanged ||
-                !this.queryParams ||
-                queryParams[key] !== this.queryParams[key]) {
-              anythingChanged = true;
-            }
-          }
-          // Need to check whether any keys were deleted
-          for (var key in this.queryParams) {
-            if (anythingChanged || !(key in queryParams)) {
-              anythingChanged = true;
-              break;
-            }
-          }
-
-          if (!anythingChanged) {
+          var isSame = this.__queryParamsEqual(this.queryParams, queryParams);
+          if (isSame) {
             return;
           }
           this._queryParamsUpdating = true;
-          this.set('queryParams', copyOfQueryParams);
+          this.set('queryParams', queryParams);
           this._queryParamsUpdating = false;
         }
+      },
+
+      /**
+       * Function to check the equality of two URLSearchParams objects
+       */
+      __queryParamsEqual: function(queryParams1, queryParams2) {
+        // if they refer to the same object, return true
+        if (queryParams1 === queryParams2) {
+          return true;
+        }
+        // if only one is null or undefined, return false
+        if (!queryParams1 && queryParams2) {
+          return false;
+        }
+        if (queryParams1 && !queryParams2) {
+          return false;
+        }
+        if (!(queryParams1 instanceof URLSearchParams)) {
+          alert('Somethings wrong with 1');
+          for (let i in queryParams1) {
+            alert(i);
+            alert(queryParams1[i]);
+          }
+        }
+        if (!(queryParams2 instanceof URLSearchParams)) {
+          alert('Somethings wrong with 2');
+          for (let i in queryParams2) {
+            alert(i);
+            alert(queryParams2[i]);
+          }
+        }
+        var url1Array = Array.from(queryParams1.entries()),
+            url2Array = Array.from(queryParams2.entries());
+        if (url1Array.length !== url2Array.length) {
+          return false;
+        }
+        for (var i = 0; i < url1Array.length; ++i) {
+          if (url1Array[i][0] !== url2Array[i][0] ||
+              url1Array[i][1] !== url2Array[i][1]) {
+            return false;
+          }
+        }
+        return true;
       },
 
       /**
        * @export
        */
       __tailQueryParamsChanged: function(queryParams) {
-        if (queryParams && this.route && this.route.__queryParams != queryParams) {
+        if (queryParams && this.route && !this.__queryParamsEqual(this.route.__queryParams, queryParams)) {
           this.set('route.__queryParams', queryParams);
         }
       },
@@ -237,7 +263,6 @@ the `app-route` will update `route.path`. This in-turn will update the
         if (!this.active || this._queryParamsUpdating) {
           return;
         }
-
         this.set('route.__' + changes.path, changes.value);
       },
 

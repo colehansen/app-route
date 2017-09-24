@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <script src="../bower_components/webcomponentsjs/webcomponents-lite.js"></script>
+    <link rel="import" href="../bower_components/polymer/polymer.html">
+    <link rel="import" href="../app-location.html">
+  </head>
+  <body>
+    <dom-module id='test-location'>
+      <template>
+        <app-location route="{{route}}" query-param="{{queryParams}}"></app-location>
+        <span>Route Prefix: {{route.prefix}}</span>
+        <span>Route Path: {{route.path}}</span>
+        <span>Route Query Params: {{route.__queryParams.t}}</span>
+        <span>Query Params: {{get('t', queryParams)}}</span>
+      </template>
+      <script>
+        Polymer({
+          is: 'test-location',
+          get: function(key, qp) {
+            console.log(qp);
+            return qp.get(key);
+          }
+        });
+      </script>
+    </dom-module>
+    <test-location></test-location>
+  </body>
+</html>

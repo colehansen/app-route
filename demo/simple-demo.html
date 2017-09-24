@@ -10,16 +10,16 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 -->
 <html>
 <head>
-<script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+<script src="../bower_components/webcomponentsjs/webcomponents-lite.js"></script>
 
 <title>app-route Demo</title>
-<link rel="import" href="../../polymer/polymer.html">
+<link rel="import" href="../bower_components/polymer/polymer.html">
 
-<link rel="import" href="../../iron-demo-helpers/url-bar.html">
-<link rel="import" href="../../iron-demo-helpers/demo-snippet.html">
-<link rel="import" href="../../iron-pages/iron-pages.html">
-<link rel="import" href="../../paper-input/paper-input.html">
-<link rel="import" href="../../paper-button/paper-button.html">
+<link rel="import" href="../bower_components/iron-demo-helpers/url-bar.html">
+<link rel="import" href="../bower_components/iron-demo-helpers/demo-snippet.html">
+<link rel="import" href="../bower_components/iron-pages/iron-pages.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
 
 <link rel="import" href="../app-location.html">
 <link rel="import" href="../app-route.html">
@@ -108,9 +108,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
       <div demo="queryParamsDemo">
         Change the value of the hello query param
-        <paper-input value="{{queryParams.hello}}"></paper-input>
+        <paper-input value="{{queryParams}}"></paper-input>
         Change the value of the foo param
-        <paper-input value="{{queryParams.foo}}"></paper-input>
+        <paper-input value="{{queryParams)}}"></paper-input>
       </div>
     </iron-pages>
   </template>

@@ -15,7 +15,7 @@
   "private": true,
   "ignore": [],
   "dependencies": {
-    "iron-location": "PolymerElements/iron-location#1 - 2",
+    "iron-location": "colehansen/iron-location#url-search-params",
     "polymer": "Polymer/polymer#1.9 - 2"
   },
   "devDependencies": {
@@ -61,6 +61,7 @@
     }
   },
   "resolutions": {
-    "webcomponentsjs": "^1.0.0"
+    "webcomponentsjs": "^1.0.0",
+    "iron-location": "url-search-params"
   }
 }

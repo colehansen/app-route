@@ -28,10 +28,7 @@ and should be passed to other `app-route` elements:
     {
       prefix: '',
       path: '/elements/app-route-converter',
-      __queryParams: {
-        foo: 'bar',
-        baz: 'qux'
-      }
+      __queryParams: queryParams (where queryParams is a URLSearchParams object)
     }
 
 `__queryParams` is private to discourage directly data-binding to it. This is so

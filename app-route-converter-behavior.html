@@ -32,18 +32,28 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
          */
         route: {
           type: Object,
-          notify: true
+          notify: true,
+          value: function() {
+            return {
+              prefix: '',
+              path: '',
+              __queryParams: new URLSearchParams()
+            }
+          }
         },
 
         /**
-         * A set of key/value pairs that are universally accessible to branches of
-         * the route tree.
+         * A URLSearchParams object that is universally accessible to branches
+         * of the route tree.
          *
-         * @type {?Object}
+         * @type {?URLSearchParams}
          */
         queryParams: {
           type: Object,
-          notify: true
+          notify: true,
+          value: function() {
+            return new URLSearchParams()
+          }
         },
 
         /**
@@ -64,8 +74,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       ],
 
       created: function() {
+        debugger;
+        alert("created");
         this.linkPaths('route.__queryParams', 'queryParams');
         this.linkPaths('queryParams', 'route.__queryParams');
+      },
+
+      ready: function() {
+        alert("ready");
+        alert(this.queryParams);
       },
 
       /**
@@ -77,10 +94,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             this.queryParams === this.route.__queryParams) {
           return;
         }
+        console.log("qp", this.queryParams);
         this.route = {
           prefix: '',
           path: this.path,
-          __queryParams: this.queryParams
+          __queryParams: this.queryParams || new URLSearchParams()
         };
       },
 
@@ -98,14 +116,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       /**
        * Handler called when the route queryParams change.
        *
-       * @param  {Object} queryParams A set of key/value pairs that are
+       * @param  {URLSearchParams} queryParams A URLSearchParams object that is
        * universally accessible to branches of the route tree.
        */
       _routeQueryParamsChanged: function(queryParams) {
         if (!this.route) {
           return;
         }
-        this.queryParams = queryParams;
+        console.log("rqp", queryParams);
+        this.queryParams = queryParams || new URLSearchParams();
       }
     };
   })();
